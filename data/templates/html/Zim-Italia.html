@@ -1,0 +1,197 @@
+
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>[% title %]</title>
+  <meta name="generator" content="[% generator.name %]">
+  <meta name="description" content="Quaderno esportato da Zim Wiki Italia">
+  <style>
+    :root {
+      font-family: system-ui, "Segoe UI", Arial, sans-serif;
+      color: #202938;
+      background: #f2f5fa;
+      line-height: 1.7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body { margin: 0; }
+
+    a {
+      color: #2457a7;
+      overflow-wrap: anywhere;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #dfe5ef;
+      padding: 18px 5%;
+    }
+
+    .brand {
+      font-size: 1.15rem;
+      font-weight: 750;
+      color: #202938;
+      text-decoration: none;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    main {
+      width: min(900px, 92%);
+      margin: 32px auto;
+    }
+
+    .intro {
+      padding: 30px;
+      margin-bottom: 22px;
+      background: #e6efff;
+      border-radius: 16px;
+    }
+
+    .intro h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 5vw, 2.7rem);
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .intro p { margin-bottom: 0; }
+
+    article {
+      background: #ffffff;
+      border: 1px solid #e0e6ef;
+      border-radius: 16px;
+      padding: clamp(18px, 4vw, 34px);
+      margin-bottom: 22px;
+      box-shadow: 0 4px 18px rgb(25 45 75 / 5%);
+    }
+
+    article h2 {
+      margin-top: 0;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e0e6ef;
+      overflow-wrap: anywhere;
+    }
+
+    .wiki-content {
+      overflow-wrap: anywhere;
+    }
+
+    .wiki-content img,
+    .wiki-content video {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .wiki-content table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+      border-collapse: collapse;
+    }
+
+    .wiki-content th,
+    .wiki-content td {
+      padding: 8px;
+      border: 1px solid #dfe5ef;
+      text-align: left;
+    }
+
+    .wiki-content pre {
+      max-width: 100%;
+      padding: 14px;
+      overflow-x: auto;
+      background: #f1f4f8;
+      border-radius: 8px;
+    }
+
+    .page-footer {
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 1px solid #e0e6ef;
+      font-size: .9rem;
+    }
+
+    .generated-by {
+      text-align: center;
+      color: #667085;
+      font-size: .85rem;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 14px 4%; }
+      main { margin: 18px auto; }
+      .intro { padding: 22px; }
+    }
+
+    @media print {
+      :root { background: #ffffff; }
+      header nav { display: none; }
+      main { width: 100%; margin: 0; }
+      article, .intro {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <a class="brand" href="#">Zim Wiki Italia</a>
+
+    <nav aria-label="Navigazione">
+      [% IF navigation.prev %]
+      <a href="[% uri(navigation.prev) %]">← Precedente</a>
+      [% END %]
+
+      [% IF links.get("index") %]
+      <a href="[% uri(links.get("index")) %]">Indice</a>
+      [% END %]
+
+      [% IF navigation.next %]
+      <a href="[% uri(navigation.next) %]">Successiva →</a>
+      [% END %]
+    </nav>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h1>[% title %]</h1>
+      <p>Quaderno personale — Zim Wiki Italia</p>
+    </section>
+
+    <div class="pages">
+      <!--[% FOR page IN pages %]-->
+      <article>
+        <h2 id="[% anchor(page) %]">[% page.title %]</h2>
+
+        <div class="wiki-content">
+          [% page.body %]
+        </div>
+
+        <footer class="page-footer">
+          <!--[% FOR link IN page.backlinks %]-->
+          [% IF loop.first %]<strong>Collegamenti:</strong> [% END %]
+          <a href="[% uri(link) %]">[% link.name %]</a>
+          <!--[% END %]-->
+        </footer>
+      </article>
+      <!--[% END %]-->
+    </div>
+
+    <p class="generated-by">
+      Esportato con [% generator.name %]
+    </p>
+  </main>
+</body>
+</html>
