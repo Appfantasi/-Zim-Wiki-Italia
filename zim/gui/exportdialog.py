@@ -6,6 +6,10 @@
 from gi.repository import Gtk
 
 import logging
+import os
+import shutil
+import subprocess
+import tempfile
 
 import zim.formats
 import zim.templates
@@ -26,6 +30,58 @@ from zim.export.selections import *
 logger = logging.getLogger('zim.export')
 
 
+
+class ExternalFormatExporter(object):
+	'''Convert a Zim single-file export to DOCX or PDF using an external tool.'''
+
+	def __init__(self, output, format):
+		self.output = output
+		self.format = format
+
+	def export_iter(self, selection):
+		if self.format == 'Word (DOCX)':
+			command = shutil.which('pandoc')
+			if not command:
+				raise RuntimeError(_('Word export requires Pandoc. Install it from https://pandoc.org/installing.html and restart Zim.'))
+			native_format = 'markdown'
+			extension = 'md'
+		else:
+			command = shutil.which('latexmk')
+			if not command:
+				raise RuntimeError(_('PDF export requires latexmk and a LaTeX distribution, such as MiKTeX. Install them and restart Zim.'))
+			native_format = 'latex'
+			extension = 'tex'
+
+		with tempfile.TemporaryDirectory(prefix='zim-export-') as tempdir:
+			tempfile_path = os.path.join(tempdir, 'document.' + extension)
+			exporter = build_single_file_exporter(
+				LocalFile(tempfile_path), native_format, 'Default'
+			)
+			for item in exporter.export_iter(selection):
+				yield item
+
+			if self.format == 'Word (DOCX)':
+				args = [command, tempfile_path, '--output=' + self.output.path]
+			else:
+				args = [
+					command, '-pdf', '-interaction=nonstopmode',
+					'-halt-on-error', 'document.tex'
+				]
+				# latexmk must run in the directory containing document.tex
+				result = subprocess.run(args, cwd=tempdir, capture_output=True, text=True)
+				if result.returncode:
+					raise RuntimeError(_('LaTeX could not create the PDF. Check the LaTeX installation and packages.\\n') + result.stdout[-3000:] + result.stderr[-3000:])
+				pdf_path = os.path.join(tempdir, 'document.pdf')
+				if not os.path.exists(pdf_path):
+					raise RuntimeError(_('LaTeX finished without creating the PDF file.'))
+				shutil.copyfile(pdf_path, self.output.path)
+				return
+
+			result = subprocess.run(args, capture_output=True, text=True)
+			if result.returncode:
+				raise RuntimeError(_('Pandoc could not create the Word document.\\n') + result.stdout[-3000:] + result.stderr[-3000:])
+
+
 class ExportDialog(Assistant):
 
 	def __init__(self, widget, notebook, page=None):
@@ -38,8 +94,8 @@ class ExportDialog(Assistant):
 		self.append_page(OutputPage(self))
 
 	def do_response_ok(self):
-		output, exporter = self.get_exporter()
 		selection = self.get_selection()
+		output, exporter = self.get_exporter(selection)
 		logger.debug('exporter: %s, selection: %s',
 			exporter.__class__.__name__,
 			selection.__class__.__name__)
@@ -81,7 +137,7 @@ class ExportDialog(Assistant):
 			else:
 				return SinglePage(self.notebook, path)
 
-	def get_exporter(self):
+	def get_exporter(self, selection=None):
 		#~ import pprint
 		#~ pprint.pprint(self.uistate)
 		#~ return True
@@ -90,6 +146,13 @@ class ExportDialog(Assistant):
 		for k in ('format', 'template', 'index_page'):
 			if self.uistate[k] and not self.uistate[k].isspace():
 				options[k] = self.uistate[k]
+
+		if options['format'] in ('Word (DOCX)', 'PDF'):
+			file = self.get_file()
+			if file:
+				return file, ExternalFormatExporter(file, options['format'])
+			else:
+				return None, None
 
 		if options['template'] == '__file__':
 			options['template'] = self.uistate['template_file']
@@ -217,6 +280,7 @@ class FormatPage(AssistantPage):
 		AssistantPage.__init__(self, assistant)
 		export_formats = zim.formats.list_formats(zim.formats.EXPORT_FORMAT)
 		export_formats.insert(1, ('mhtml', 'MHTML (Web Page Archive)'))
+		export_formats.extend((('Word (DOCX)', 'Word (DOCX)'), ('PDF', 'PDF')))
 		self.add_form((
 			('format', 'choice', _('Format'), export_formats), # T: Input label in the export dialog
 			('template', 'choice', _('Template'), ()), # T: Input label in the export dialog
@@ -340,7 +404,7 @@ class OutputPage(AssistantPage):
 		self.uistate.setdefault('index_page', '')
 		self.uistate.setdefault('output_file', None, LocalFile)
 
-		if self.uistate.get('format', '').startswith('MHTML'):
+		if self.uistate.get('format', '').startswith('MHTML') or self.uistate.get('format') in ('Word (DOCX)', 'PDF'):
 			# XXX make this a format property to be queried
 			self.form.widgets['output:multi_file'].set_sensitive(False)
 			self.form.widgets['output:single_file'].set_sensitive(False)
@@ -361,6 +425,10 @@ class OutputPage(AssistantPage):
 		format = self.uistate['format']
 		if format.startswith('MHTML'):
 			ext = 'mht'
+		elif format == 'Word (DOCX)':
+			ext = 'docx'
+		elif format == 'PDF':
+			ext = 'pdf'
 		else:
 			ext = zim.formats.get_format(format).info['extension']
 
