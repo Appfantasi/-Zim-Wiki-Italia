@@ -55,7 +55,7 @@ class ExternalFormatExporter(object):
 		with tempfile.TemporaryDirectory(prefix='zim-export-') as tempdir:
 			tempfile_path = os.path.join(tempdir, 'document.' + extension)
 			exporter = build_single_file_exporter(
-				LocalFile(tempfile_path), native_format, 'Default'
+				LocalFile(tempfile_path), native_format, ('Report' if native_format == 'latex' else 'Default')
 			)
 			for item in exporter.export_iter(selection):
 				yield item
