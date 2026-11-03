@@ -138,3 +138,8 @@ The following files were included from other sources:
 * `pixmaps/calendar.png` (was: `stock_calendar-view-month.png`)
   Copyright 2007 by Jakub Steiner, released under GPL
   modifications copyright 2009 by Gabriel Hurley
+
+
+## Esportazione in Word e PDF
+
+La guida in italiano per esportare i quaderni in Word (DOCX), PDF, LaTeX e Markdown è disponibile in [docs/ESPORTAZIONE-FORMATI.md](docs/ESPORTAZIONE-FORMATI.md). Lo script PowerShell si trova in [tools/export-document.ps1](tools/export-document.ps1). Word richiede Pandoc; PDF richiede una distribuzione LaTeX con `latexmk`.
