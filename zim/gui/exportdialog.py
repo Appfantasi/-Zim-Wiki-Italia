@@ -405,7 +405,9 @@ class OutputPage(AssistantPage):
 		self.uistate.setdefault('output_file', None, LocalFile)
 
 		if self.uistate.get('format', '').startswith('MHTML') or self.uistate.get('format') in ('Word (DOCX)', 'PDF'):
-			# XXX make this a format property to be queried
+			# These formats are generated as a single document
+			if self.uistate.get('format') in ('Word (DOCX)', 'PDF'):
+				self.uistate['output'] = 'single_file'
 			self.form.widgets['output:multi_file'].set_sensitive(False)
 			self.form.widgets['output:single_file'].set_sensitive(False)
 			self.form.widgets['output:single_file'].set_active(True)
@@ -417,6 +419,8 @@ class OutputPage(AssistantPage):
 		self.form.widgets['output:single_file'].show()
 
 		self.form['output'] = self.uistate['output']
+		if self.uistate.get('format') in ('Word (DOCX)', 'PDF'):
+			self.form['output'] = 'single_file'
 
 		self.on_output_changed(None)
 
