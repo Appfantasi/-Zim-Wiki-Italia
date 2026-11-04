@@ -96,12 +96,13 @@ class ExportDialog(Assistant):
 	def do_response_ok(self):
 		selection = self.get_selection()
 		output, exporter = self.get_exporter(selection)
-		logger.debug('exporter: %s, selection: %s',
-			exporter.__class__.__name__,
-			selection.__class__.__name__)
 		if exporter is None or selection is None:
 			logger.debug('Cancelled - selection')
 			return False # canceled
+
+		logger.debug('exporter: %s, selection: %s',
+			exporter.__class__.__name__,
+			selection.__class__.__name__)
 
 		# Run export
 		logging_context = LogContext()
